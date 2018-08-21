@@ -1,0 +1,30 @@
+package main
+
+import (
+	"fmt"
+	"math"
+	"time"
+)
+
+func main() {
+	const thread = 16
+	for i := uint64(3); i < uint64(2 * thread + 3); i += 2 {
+		go prime(i)
+	}
+	time.Sleep(time.Minute)
+}
+
+func prime(n uint64) {
+	for i := n; i < math.MaxUint64; i += 32 {
+		isPrime := true
+		for j := uint64(3); j*j <= i; j += 2 {
+			if i%j == 0 {
+				isPrime = false
+				break
+			}
+		}
+		if isPrime {
+			fmt.Println(i)
+		}
+	}
+}
