@@ -3,21 +3,25 @@ package main
 import (
 	"fmt"
 	"math"
-	"time"
+	"sync"
 )
 
 func main() {
-	const thread = 16
+	thread := 15
+	wg := &sync.WaitGroup{}
 	for i := uint64(3); i < uint64(2*thread+3); i += 2 {
-		go prime(i, thread)
+		go prime(i, thread, wg)
 	}
-	time.Sleep(time.Minute)
+	wg.Wait()
 }
 
-func prime(n uint64, thread int) {
-	for i := n; i < math.MaxUint64; i += uint64(2 * thread) {
+func prime(n uint64, thread int, wg *sync.WaitGroup) {
+	wg.Add(1)
+	increment := uint64(2 * thread)
+	max := math.MaxUint64 - increment
+	for i := n; i < max; i += increment {
 		isPrime := true
-		for j := uint64(3); j*j <= i; j += 2 {
+		for j := uint64(3); j*j <= i; j += uint64(2) {
 			if i%j == 0 {
 				isPrime = false
 				break
@@ -27,4 +31,5 @@ func prime(n uint64, thread int) {
 			fmt.Println(i)
 		}
 	}
+	wg.Done()
 }
