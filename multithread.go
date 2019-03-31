@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	thread := 15
+	thread := runtime.NumCPU()
 	wg := &sync.WaitGroup{}
 	for i := uint64(3); i < uint64(2*thread+3); i += 2 {
 		go prime(i, thread, wg)
