@@ -19,10 +19,23 @@ const (
 )
 
 func main() {
-	thread := uint64(runtime.NumCPU())
+	thread := uint64(runtime.NumCPU() - 1)
 	c := make(chan uint64, chanSize)
-	for i := uint64(3); i < uint64(2*thread+3); i += 2 {
-		go prime(i, thread, c)
+	n := uint64(3)
+	count := 0
+	for {
+		if gcd(n, thread) != 1 {
+			if isPrime(n) {
+				c <- n
+			}
+		} else {
+			go prime(n, thread, c)
+			count++
+		}
+		if count == int(thread) {
+			break
+		}
+		n += 2
 	}
 	buf := make([]byte, 0)
 	for {
@@ -52,4 +65,23 @@ func isPrime(i uint64) bool {
 		}
 	}
 	return true
+}
+
+func gcd(a, b uint64) uint64 {
+	if a < b {
+		tmp := a
+		a = b
+		b = tmp
+	}
+
+	r := a % b
+	for {
+		if r == 0 {
+			break
+		}
+		a = b
+		b = r
+		r = a % b
+	}
+	return b
 }
