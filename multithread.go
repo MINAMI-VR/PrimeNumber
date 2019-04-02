@@ -8,14 +8,8 @@ import (
 )
 
 const (
-	_  = iota
-	KB = 1 << (10 * iota)
-	MB = 1 << (10 * iota)
-)
-
-const (
-	chanSize = KB
-	bufSize  = MB
+	chanSize = 1024
+	bufSize  = 15990
 )
 
 func main() {
