@@ -5,55 +5,72 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"sync"
 )
 
-const (
-	chanSize = 1024
-	bufSize  = 15990
-)
+const bufSize = 16000
+
+const offset = 3
 
 func main() {
-	thread := uint64(runtime.NumCPU() - 1)
-	c := make(chan uint64, chanSize)
-	n := uint64(3)
-	count := 0
+	numCPU := runtime.NumCPU()
+	minThread := 2
 	for {
-		if gcd(n, thread) != 1 {
-			if isPrime(n) {
-				c <- n
-			}
-		} else {
-			go prime(n, thread, c)
-			count++
-		}
-		if count == int(thread) {
+		if minThread >= numCPU {
 			break
 		}
-		n += 2
+		minThread = minThread * 2
 	}
-	buf := make([]byte, 0)
-	for {
-		buf = append(buf, strconv.FormatUint(<-c, 10)...)
-		buf = append(buf, '\n')
-		if len(buf) > bufSize {
-			os.Stdout.Write(buf)
-			buf = make([]byte, 0)
+	maxThreads := minThread * 2
+	validThreads := minThread
+	threads := minThread
+	for i := minThread; i < maxThreads; i++ {
+		count := 0
+		n := i*2 + 3
+		for j := 3; j < n; j += 2 {
+			if gcd(uint64(j), uint64(i)) == 1 {
+				count++
+			}
+		}
+		if float64(count)/float64(i) < float64(validThreads)/float64(threads) {
+			threads = i
+			validThreads = count
 		}
 	}
+	n := uint64(2*threads + offset)
+	count := 0
+	wg := &sync.WaitGroup{}
+	for i := uint64(offset); i < n; i += 2 {
+		if gcd(i, uint64(threads)) == 1 {
+			wg.Add(1)
+			go prime(i, threads, wg)
+			count++
+		} else if isPrime(i) {
+			os.Stdout.Write(append([]byte(strconv.FormatUint(i, 10)), '\n'))
+		}
+	}
+	wg.Wait()
 }
 
-func prime(n uint64, thread uint64, c chan uint64) {
+func prime(n uint64, thread int, wg *sync.WaitGroup) {
 	increment := uint64(2 * thread)
 	max := uint64(math.MaxUint64 - increment)
+	buf := make([]byte, 0, bufSize)
 	for i := n; i < max; i += increment {
 		if isPrime(i) {
-			c <- i
+			buf = append(append(buf, strconv.FormatUint(i, 10)...), '\n')
+			if len(buf) > bufSize-10 {
+				os.Stdout.Write(buf)
+				buf = make([]byte, 0, bufSize)
+			}
 		}
 	}
+	wg.Done()
 }
 
 func isPrime(i uint64) bool {
-	for j := uint64(3); j*j <= i; j += uint64(2) {
+	n := uint64(math.Sqrt(float64(i)))
+	for j := uint64(offset); j <= n; j += uint64(2) {
 		if i%j == 0 {
 			return false
 		}
