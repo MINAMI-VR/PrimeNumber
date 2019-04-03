@@ -13,6 +13,21 @@ const bufSize = 16000
 const offset = 3
 
 func main() {
+	threads := getThreads()
+	n := uint64(2*threads + offset)
+	wg := &sync.WaitGroup{}
+	for i := uint64(offset); i < n; i += 2 {
+		if gcd(i, uint64(threads)) == 1 {
+			wg.Add(1)
+			go prime(i, threads, wg)
+		} else if isPrime(i) {
+			os.Stdout.Write(append([]byte(strconv.FormatUint(i, 10)), '\n'))
+		}
+	}
+	wg.Wait()
+}
+
+func getThreads() int {
 	numCPU := runtime.NumCPU()
 	minThread := 2
 	for {
@@ -37,19 +52,7 @@ func main() {
 			validThreads = count
 		}
 	}
-	n := uint64(2*threads + offset)
-	count := 0
-	wg := &sync.WaitGroup{}
-	for i := uint64(offset); i < n; i += 2 {
-		if gcd(i, uint64(threads)) == 1 {
-			wg.Add(1)
-			go prime(i, threads, wg)
-			count++
-		} else if isPrime(i) {
-			os.Stdout.Write(append([]byte(strconv.FormatUint(i, 10)), '\n'))
-		}
-	}
-	wg.Wait()
+	return threads
 }
 
 func prime(n uint64, thread int, wg *sync.WaitGroup) {
