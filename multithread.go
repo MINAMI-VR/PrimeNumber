@@ -47,7 +47,7 @@ func getThreads() int {
 				count++
 			}
 		}
-		if float64(count)/float64(i) < float64(validThreads)/float64(threads) && validThreads < i {
+		if float64(count)/float64(i) < float64(validThreads)/float64(threads) && validThreads <= i {
 			threads = i
 			validThreads = count
 		}
