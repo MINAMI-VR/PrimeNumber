@@ -20,8 +20,9 @@ const max uint64 = math.MaxUint64 - 90
 
 const maxUint64 uint64 = math.MaxUint64
 
+const n uint64 = 93
+
 func main() {
-	n := uint64(93)
 	wg := &sync.WaitGroup{}
 	buf := make([]byte, 1, 1000)
 	buf[0] = '2'
